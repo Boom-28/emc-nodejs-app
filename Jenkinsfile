@@ -2,17 +2,16 @@ pipeline {
     agent { label 'worker' }
 
     environment {
-        IMAGE_NAME = 'boom04/emc-nodejs-app3'
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
-        DOCKERHUB_CREDS = credentials('dockerhub-creds')
+        IMAGE_NAME  = 'emc-nodejs-app:v1'
+        DOCKER_REPO = 'boom04/emc-nodejs-app2'
         SONAR_TOKEN = credentials('sonar-token')
     }
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Build Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Boom-28/emc-nodejs-app.git'
+                git branch: 'main', credentialsId: 'Git-Token', url: 'https://github.com/Boom-28/emc-nodejs-app.git'
             }
         }
 
@@ -44,39 +43,37 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker build') {
             steps {
-                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG -t $IMAGE_NAME:latest .'
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
-        stage('Show Docker Images') {
+        stage('push to docker hub') {
             steps {
-                sh 'docker images'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        docker login -u $DOCKER_USER -p $DOCKER_PASS
+                        docker tag $IMAGE_NAME $DOCKER_REPO:v1
+                        docker push $DOCKER_REPO:v1
+                    '''
+                }
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Docker pull') {
             steps {
-                sh 'echo $DOCKERHUB_CREDS_PSW | docker login -u $DOCKERHUB_CREDS_USR --password-stdin'
-                sh 'docker push $IMAGE_NAME:$IMAGE_TAG'
-                sh 'docker push $IMAGE_NAME:latest'
+                sh 'docker pull $DOCKER_REPO:v1'
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy app') {
             steps {
                 sh '''
-                    docker rm -f emc-nodejs-app || true
-                    docker run -d --name emc-nodejs-app -p 80:3000 $IMAGE_NAME:latest
+                    docker rm -f emc-node-app || true
+                    docker run -d -p 80:3000 --name emc-node-app $DOCKER_REPO:v1
                 '''
             }
-        }
-    }
-
-    post {
-        always {
-            sh 'docker logout'
         }
     }
 }
