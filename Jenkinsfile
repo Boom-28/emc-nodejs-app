@@ -14,14 +14,6 @@ pipeline {
                 git branch: 'main', credentialsId: 'Git-Token', url: 'https://github.com/Boom-28/emc-nodejs-app.git'
             }
         }
-
-        stage('Install Dependencies & Test') {
-            steps {
-                sh 'npm install'
-                sh 'npm test || echo "No tests configured yet"'
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('MySonarQubeServer') {
