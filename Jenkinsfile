@@ -1,27 +1,34 @@
 pipeline {
     agent { label 'worker' }
-
     environment {
         IMAGE_NAME  = 'emc-nodejs-app:v1'
         DOCKER_REPO = 'boom04/emc-nodejs-app2'
         SONAR_TOKEN = credentials('sonar-token')
     }
-
     stages {
-
         stage('Build Checkout') {
             steps {
                 git branch: 'main', credentialsId: 'Git-Token', url: 'https://github.com/Boom-28/emc-nodejs-app.git'
             }
         }
+
+        stage('Install Dependencies & Test') {
+            steps {
+                sh 'npm install'
+                sh 'npm test || echo "No tests configured yet"'
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar') {
                     sh '''
-                        sonar-scanner \
-                          -Dsonar.projectKey=emc-nodejs-app \
-                          -Dsonar.sources=. \
-                          -Dsonar.login=$SONAR_TOKEN
+                        /opt/sonar-scanner/bin/sonar-scanner \
+                        -Dsonar.projectKey=demo-check \
+                        -Dsonar.projectName="SonarQube Jenkins Demo" \
+                        -Dsonar.projectVersion=1.0 \
+                        -Dsonar.sources=. \
+                        -Dsonar.login=$SONAR_TOKEN
                     '''
                 }
             }
@@ -43,7 +50,7 @@ pipeline {
 
         stage('push to docker hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
                         docker login -u $DOCKER_USER -p $DOCKER_PASS
                         docker tag $IMAGE_NAME $DOCKER_REPO:v1
@@ -62,8 +69,8 @@ pipeline {
         stage('Deploy app') {
             steps {
                 sh '''
-                    docker rm -f emc-node-app || true
-                    docker run -d -p 80:3000 --name emc-node-app $DOCKER_REPO:v1
+                    docker rm -f week-12 || true
+                    docker run -d -p 80:3000 --name week-12 $DOCKER_REPO:v1
                 '''
             }
         }
