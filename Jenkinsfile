@@ -16,7 +16,7 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('MySonarQubeServer') {
+                withSonarQubeEnv('sonar') {
                     sh '''
                         sonar-scanner \
                           -Dsonar.projectKey=emc-nodejs-app \
