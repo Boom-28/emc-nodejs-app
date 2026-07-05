@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Build Checkout') {
             steps {
-                git branch: 'main', credentialsId: 'Git-Token', url: 'https://github.com/Boom-28/emc-nodejs-app.git'
+                git branch: 'main', credentialsId: 'Github-token', url: 'https://github.com/Boom-28/emc-nodejs-app.git'
             }
         }
 
