@@ -25,7 +25,7 @@ pipeline {
                     sh '''
                         /opt/sonar-scanner/bin/sonar-scanner \
                         -Dsonar.projectKey=demo-check \
-                        -Dsonar.projectName="SonarQube Jenkins Demo" \
+                        -Dsonar.projectName="SonarQube Jenkins week12" \
                         -Dsonar.projectVersion=1.0 \
                         -Dsonar.sources=. \
                         -Dsonar.login=$SONAR_TOKEN
