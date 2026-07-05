@@ -68,7 +68,7 @@ pipeline {
             steps {
                 sh '''
                     docker rm -f emc-nodejs-app || true
-                    docker run -d --name emc-nodejs-app -p 3000:3000 $IMAGE_NAME:latest
+                    docker run -d --name emc-nodejs-app -p 80:3000 $IMAGE_NAME:latest
                 '''
             }
         }
